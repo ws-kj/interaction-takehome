@@ -9,7 +9,7 @@ def main():
     db = ApplicationDatabase()
 
     # Process new application emails
-    updates = email_processor.process_new_updates()
+    updates = email_processor.process_new_updates(unread_only=False)
     for update in updates:
         db.update_application(
             update.company,

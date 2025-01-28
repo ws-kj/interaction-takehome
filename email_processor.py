@@ -69,9 +69,9 @@ class EmailProcessor:
 
         self.service = build('gmail', 'v1', credentials=self.creds)
 
-    def process_new_updates(self):
+    def process_new_updates(self, unread_only=False):
         updates = []
-        new_messages = self.get_application_emails()
+        new_messages = self.get_application_emails(unread_only)
         for email in new_messages:
             if self.is_update(email):
                 parsed = self.extract_update(email)
@@ -120,7 +120,7 @@ class EmailProcessor:
             headers = msg['payload']['headers']
             sender = next((h['value'] for h in headers if h['name'].lower() == 'from'), '(No Sender)')
             subject = next((h['value'] for h in headers if h['name'].lower() == 'subject'), '(No Subject)')
-            date_str = next((h['value'] for h in headers if h['name'].lower() == 'date'), None)
+            date_str = next((h['value'] for h in headers if h['name'].lower() == 'datetime'), None)
 
             if date_str:
                 sent_time = parsedate_to_datetime(date_str)

@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Application Tracker</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            th,
+            td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+            button {
+                padding: 10px;
+                margin-right: 10px;
+                cursor: pointer;
+            }
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Job Applications</h1>
+            <div>
+                <button onclick="refreshApplications()">
+                    Get Application Updates
+                </button>
+                <button onclick="refreshAll()">Refresh All Applications</button>
+                <button onclick="downloadExcel()">Download Excel</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Status</th>
+                        <th>Last Updated</th>
+                        <th>Summary</th>
+                    </tr>
+                </thead>
+                <tbody id="applications-body"></tbody>
+            </table>
+        </div>
+
+        <script>
+            async function loadApplications() {
+                try {
+                    const response = await fetch(
+                        "http://localhost:8000/applications",
+                    );
+                    const apps = await response.json();
+                    const tbody = document.getElementById("applications-body");
+                    tbody.innerHTML = "";
+
+                    apps.forEach((app) => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                        <td>${app.company}</td>
+                        <td>${app.status}</td>
+                        <td>${new Date(app.updated_date).toLocaleDateString()}</td>
+                        <td>${app.summary || ""}</td>
+                    `;
+                        tbody.appendChild(row);
+                    });
+                } catch (error) {
+                    console.error("Error loading applications:", error);
+                }
+            }
+
+            async function refreshApplications() {
+                try {
+                    const response = await fetch(
+                        "http://localhost:8000/process/new",
+                        {
+                            method: "POST",
+                        },
+                    );
+                    const result = await response.json();
+                    alert(`Processed ${result.processed_count} updates`);
+                    await loadApplications();
+                } catch (error) {
+                    console.error("Error refreshing:", error);
+                    alert("Error processing updates");
+                }
+            }
+
+            async function refreshAll() {
+                try {
+                    const response = await fetch(
+                        "http://localhost:8000/process/all",
+                        {
+                            method: "POST",
+                        },
+                    );
+                    const result = await response.json();
+                    await loadApplications();
+                } catch (error) {
+                    console.error("Error refreshing:", error);
+                    alert("Error processing updates");
+                }
+            }
+
+            async function downloadExcel() {
+                try {
+                    const response = await fetch(
+                        "http://localhost:8000/export",
+                    );
+                    const blob = await response.blob();
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = "applications.xlsx";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } catch (error) {
+                    console.error("Error downloading:", error);
+                    alert("Error generating Excel file");
+                }
+            }
+
+            // Initial load
+            window.onload = loadApplications;
+
+            // Refresh every 5 minutes (300000 milliseconds)
+            setInterval(loadApplications, 300000);
+        </script>
+    </body>
+</html>
