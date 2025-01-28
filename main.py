@@ -5,6 +5,7 @@ from email_processor import EmailProcessor
 from email.mime import application
 
 def main():
+    # test main -- fastAPI app is in app.py
     email_processor = EmailProcessor()
     db = ApplicationDatabase()
 
